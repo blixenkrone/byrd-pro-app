@@ -7,37 +7,37 @@
 					</mat-icon>
 					<img class="preview" *ngIf="f.thumbnail" src="{{previewSource(f.thumbnail)}}"
 						[ngClass]="{'cover-border': i===0}" alt="file # {{i}}">
-					<div class="meta" [ngClass]="f.meta ? 'success' : 'error'">
+					<div class="meta" [ngClass]="!f.meta.missingExif ? 'success' : 'error'">
 						<ng-container *ngIf="f.meta">
-							<ng-container *ngIf="f.meta; else errorIcon">
-								<mat-basic-chip>meta verified</mat-basic-chip>
+							<ng-container *ngIf="f.meta.missingExif; let missings; else successExif">
+								<mat-basic-chip color="warn">{{missingMetaString(f.meta.missingExif)}}</mat-basic-chip>
 							</ng-container>
-							<ng-template #errorIcon>
-								<mat-basic-chip *ngIf="f.meta?.missingExif">
-									{{f.meta}}
-								</mat-basic-chip>
+							<ng-template #successExif>
+								<mat-basic-chip>meta verified</mat-basic-chip>
 							</ng-template>
 						</ng-container>
 					</div>
 				</div>
 				<td class="file-text" *ngIf="f.meta">
-
 					<div class="info-text" *ngIf="i===0">
-						<mat-icon class="default-icon">filter_1</mat-icon>Cover image
+						<mat-icon class="default-icon">filter_1</mat-icon>
+						Cover image
 					</div>
 					<div class="info-text" *ngIf="f.file">
-						<mat-icon class="default-icon">insert_drive_file</mat-icon>{{ f.file.name }}
+						<mat-icon class="default-icon">insert_drive_file</mat-icon>
+						{{ f.file.name }}
 					</div>
 					<div class="info-text" *ngIf="f.meta?.copyright">
-						<mat-icon class="default-icon">copyright</mat-icon>{{ f.meta?.copyright }}
+						<mat-icon class="default-icon">copyright</mat-icon>
+						{{ f.meta?.copyright }}
 					</div>
 					<div class="info-text" *ngIf="f.meta?.date">
 						<mat-icon class="default-icon">watch_later</mat-icon>
-						{{f.meta?.date | date: 'dd/MM/yyyy HH:mm'}}
+						{{ f.meta?.date | date: 'dd/MM/yyyy HH:mm' }}
 					</div>
 					<div class="info-text" *ngIf="f.location">
 						<mat-icon class="default-icon">explore</mat-icon>
-						{{f.location?.locationText}}
+						{{ f.location?.locationText }}
 					</div>
 					<!-- <div class="info-text location"> -->
 					<!-- <ng-container *ngIf="geo && geo[i]">

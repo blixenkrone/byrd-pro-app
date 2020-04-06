@@ -4,15 +4,9 @@
 /dist
 /tmp
 /out-tsc
-*.jpeg
-*.png
-*.mp4
 
 # dependencies
 /node_modules
-
-# environments
-src/environments
 
 # profiling files
 chrome-profiler-events.json
@@ -47,7 +41,4 @@ testem.log
 # System Files
 .DS_Store
 Thumbs.db
-*.jpeg
-*.mp4
-*.png
 # .vscode/launch.json

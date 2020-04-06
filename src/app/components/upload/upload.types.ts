@@ -11,14 +11,35 @@ export const parseFileSuffix = (fileName: string): { suffix: string } => {
 	return { suffix: fileName.toLowerCase().split('.').pop()! }
 }
 
-interface StoryBody {
+const _requiredStoryKeys = ['width', 'height', 'lat', 'lng', 'date'];
+
+/**
+ *
+ * @param missings
+ * returns exactly what keys are required for uploading the story and discards the rest
+ */
+export const requiredKeysMissing = (missings: string[]): string[] | null => {
+	let out: string[] = [];
+	for (let i = 0; i < _requiredStoryKeys.length; i++) {
+		if (missings.length > 0) {
+			for (let j = 0; j < missings.length; j++) {
+				if (missings[j] === _requiredStoryKeys[i]) {
+					out = [...out, missings[j]]
+				}
+			}
+		}
+	}
+	return out.length > 0 ? out : null;
+}
+
+interface IStoryBody {
 	// _uuidv4: string[];
 	storageRefSalt: (userId: string, suffix: string, uuidv4: string) => string
 	createStoryByrdAPI(uuids: string[]): IStoryUploadBody
 	files(): File[]
 }
 
-export class Story implements StoryBody {
+export class Story implements IStoryBody {
 	constructor(
 		private mType: EMediaType,
 		private _userId: string,
@@ -237,7 +258,7 @@ export interface IMetadata {
 	width: number;
 	height: number;
 	mediaSize: number;
-	missingExif?: { [key: string]: string }
+	missingExif?: string[]
 }
 
 // Pro API metadata response

@@ -2,7 +2,7 @@ import { Component, OnInit, Input, Output, EventEmitter, InjectionToken, ChangeD
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { UploadService, IGeoLocation, LocationService, IGeocodingPlace, IGeoCoordinates } from 'src/app/components/upload/upload.service';
 import { IStep } from 'src/app/shared/stepper/stepper.component';
-import { IStoryFile, MetadataResponse } from '../upload.types';
+import { IStoryFile, MetadataResponse, IMetadata, requiredKeysMissing } from '../upload.types';
 import { FormGroup } from '@angular/forms';
 import { has } from 'lodash';
 
@@ -60,6 +60,11 @@ export class StoryIndexComponent implements OnInit {
 			loc.set('lng', geo.center[0])
 			this.latLng.emit({ loc, storyIdx })
 		}
+	}
+
+	missingMetaString = (missing: string[]) => {
+		const missingKeys = requiredKeysMissing(missing)
+		return `un-verified: ${missingKeys?.join(", ")}`
 	}
 
 	previewSource = (thumbnail: string) => {

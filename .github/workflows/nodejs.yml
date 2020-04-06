@@ -10,14 +10,11 @@ jobs:
     name: Build pro development
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout to master
-        uses: actions/checkout@master
+      - uses: actions/checkout@v2
 
-      - uses: actions/checkout@v1
-      - name: Use Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: "12.x"
+      # - uses: actions/setup-node@v1
+      #   with:
+      #     node-version: "12.x"
 
       - name: Login to DockerHub Registry
         run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
@@ -46,5 +43,5 @@ jobs:
           SLACK_CHANNEL: "#deployments"
           SLACK_COLOR: "#517122"
           SLACK_ICON: https://avatars0.githubusercontent.com/u/7809248?s=400&v=4
-          SLACK_TITLE: "New version of angular pro app ready to be swarmed!"
-          SLACK_MESSAGE: "This will be awesome!"
+          SLACK_TITLE: "Pro app deployment ready!"
+          SLACK_MESSAGE: "New version of angular pro app ready to be swarmed!"

@@ -22,7 +22,7 @@ import { UploadDialogModule } from 'src/app/shared/upload-dialog/upload-dialog.m
 	],
 	imports: [
 		CommonModule,
-		// UploadDialogModule,
+		UploadDialogModule,
 		BookingRoutingModule,
 		NgxFileDropModule,
 		ReactiveFormsModule,

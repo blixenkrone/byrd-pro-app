@@ -13,8 +13,7 @@ import { LoaderService } from '../load.service';
 
 @Injectable()
 export class ProTokenInterceptor implements HttpInterceptor {
-	constructor(
-		private _auth: AuthService) { }
+	constructor(private auth: AuthService) { }
 
 	intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
 		const route = req.url.split('/');
@@ -23,7 +22,7 @@ export class ProTokenInterceptor implements HttpInterceptor {
 			// ! TODO: If theres no headers > dont create header req. to pro api
 			return req.headers.has('user_token') ? next.handle(req) : of()
 		} else {
-			return this._auth.getFBAuthToken$()
+			return this.auth.getFBAuthToken$()
 				.pipe(
 					switchMap((token) => {
 						// console.log(token ? 'found token' : 'no token')

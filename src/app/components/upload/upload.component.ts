@@ -2,9 +2,9 @@ import { StepperService } from 'src/app/shared/shared.service';
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { IStep } from 'src/app/shared/stepper/stepper.component';
 import { UploadService, LocationService, IGeocodingPlace, IGeoLocation } from 'src/app/components/upload/upload.service';
-import { Observable, of, Subject, throwError, BehaviorSubject, combineLatest, concat, forkJoin, merge, zip, from } from 'rxjs';
+import { Observable, of, Subject, throwError, BehaviorSubject, combineLatest, concat, forkJoin, merge, zip, from, iif } from 'rxjs';
 import { IStoryFile, MetadataResponse, Story, IStoryValueOptions, IStoryUploadResponse } from './upload.types';
-import { tap, takeUntil, catchError, debounceTime, share, map, startWith, distinctUntilChanged, filter, take, mergeMap, retry, switchMap, finalize, concatMap, exhaustMap, withLatestFrom, reduce, mergeAll, scan, delay, concatAll, mapTo, mergeScan } from 'rxjs/operators';
+import { tap, takeUntil, catchError, debounceTime, share, map, startWith, distinctUntilChanged, filter, take, mergeMap, retry, switchMap, finalize, concatMap, exhaustMap, withLatestFrom, reduce, mergeAll, scan, delay, concatAll, mapTo, mergeScan, distinctUntilKeyChanged } from 'rxjs/operators';
 import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LoaderService } from 'src/app/core/load.service';
@@ -65,15 +65,15 @@ export class UploadComponent implements OnInit, OnDestroy {
 		})
 		// this.locationForm = this.createLocationForm()
 
-		const files$ = this.uploadService.getFilesUpload$.pipe(
+		const files$ = this.uploadService.storyFilesToUpload$.pipe(
 			tap((f) => f.length === 0 ? this.activeDumpSubj$.next(false) : this.activeDumpSubj$.next(true)),
 			filter((f, idx) => f.length > 0 && idx >= 0),
+			// distinctUntilKeyChanged('file.name'),
 			catchError(err => throwError(err)),
 			takeUntil(this.destroyed$),
 			tap(files => console.log(files)),
 			share(),
 		)
-
 
 		const getMetadata$ = (storyData: IStoryFile[]) => {
 			const mediaType = storyData[0].type!
@@ -81,7 +81,6 @@ export class UploadComponent implements OnInit, OnDestroy {
 			return this.uploadService.getMetadata$(storyData, mediaType, true).pipe(
 				filter(meta => meta instanceof Array ? meta.length > 0 : !!meta),
 				map(meta => meta instanceof Array ? meta : [meta]),
-				distinctUntilChanged(),
 				take(1),
 				retry(1),
 				debounceTime(1000),
@@ -94,10 +93,15 @@ export class UploadComponent implements OnInit, OnDestroy {
 
 		const getGeoLocation$ = (meta: MetadataResponse[]) => {
 			let reqs: Observable<IGeoLocation>[] = [];
-			for (let { lat, lng } of meta.map(e => e.meta)) {
-				reqs = [...reqs, this.locationService.getAddressByLatLng$({ lat, lng })]
+			if (meta.length > 0) {
+				for (let [idx, val] of meta.entries()) {
+					const { lat, lng } = val.meta
+					if (lat && lng) {
+						reqs = [...reqs, this.locationService.getAddressByLatLng$({ lat, lng })]
+					}
+				}
 			}
-			return combineLatest(reqs).pipe(
+			return forkJoin(reqs).pipe(
 				catchError(() => of({ locationText: `No location found` } as IGeoLocation)),
 				tap(v => console.log(v)),
 				map(res => res instanceof Array ? res : [res]),
@@ -105,6 +109,7 @@ export class UploadComponent implements OnInit, OnDestroy {
 		}
 
 		this.data$ = files$.pipe(
+			// distinctUntilKeyChanged('file.name' as any),
 			mergeMap(files => getMetadata$(files).pipe(
 				catchError(err => {
 					console.error(err)
@@ -129,8 +134,10 @@ export class UploadComponent implements OnInit, OnDestroy {
 				console.error(err)
 				return caught
 			}),
-			tap(d => console.log(d))
+			tap(d => this.uploadService.setFinal(d))
 		)
+
+		// this.data$ = this.uploadService.finalFiles$
 
 		this.storyForm = this.createStoryForm()
 
@@ -150,7 +157,17 @@ export class UploadComponent implements OnInit, OnDestroy {
 		this.destroyed$.unsubscribe()
 	}
 
-	// ! Danger zone
+	compareFn(a: IStoryFile[], b: IStoryFile[]): boolean {
+		for (const [idx, prev] of a.entries()) {
+			for (const [idx, curr] of a.entries()) {
+				if (prev.file.name === curr.file.name) {
+					return false
+				}
+			}
+		}
+		return true
+	}
+
 	// perc = (x[i] / sum) * 100;
 	uploadStory(storyData: IStoryFile[], user: IProUser) {
 		const mediaType = storyData[0].type!
@@ -159,7 +176,7 @@ export class UploadComponent implements OnInit, OnDestroy {
 		const dialogRef = this.dialogService.openDialog(UploadDialogComponent, { isLoading: true, progress: 1 })
 		const storyRequest$ = this.uploadService.postByrdStoryPropeties$(story)
 
-		const storage$ = from(storageArray).pipe(
+		const storage$ = merge(storageArray).pipe(
 			mergeAll(),
 			exhaustMap((p) => {
 				console.log(`File is ${p?.toFixed(2)}% uploaded so im waiting`)
@@ -171,7 +188,7 @@ export class UploadComponent implements OnInit, OnDestroy {
 
 		storage$.pipe(
 			retry(2),
-			concatMap(v => storyRequest$),
+			switchMap(() => storyRequest$),
 			catchError(err => {
 				const msg = err.message_ ? err.message_ : err
 				console.log(err)

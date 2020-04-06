@@ -22,7 +22,14 @@ export class UploadService {
 	private clearExifEvt$ = new Subject<boolean>();
 
 	private _filesSubj$ = new BehaviorSubject<IStoryFile[]>([]);
-	public getFilesUpload$ = this._filesSubj$.asObservable()
+	public storyFilesToUpload$ = this._filesSubj$.asObservable()
+
+	private _final$ = new BehaviorSubject<IStoryFile[]>([])
+	public finalFiles$ = this._final$.asObservable()
+
+	setFinal(files: IStoryFile[]) {
+		this._final$.next(files)
+	}
 
 	nextFilesUploadsArray(files: IStoryFile[]) {
 		this._filesSubj$.next(files)
