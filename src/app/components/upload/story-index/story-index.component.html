@@ -1,16 +1,17 @@
 <ng-container *ngIf="data; else loadTmp">
 	<div class="index-table">
 		<table class="table" cdkDropList cdkDragLockAxis="y" (cdkDropListDropped)="dragFile($event)">
-			<tr class="file" *ngFor="let f of data; let i=index;" cdkDrag [cdkDragDisabled]="step>1">
+			<tr class="file" *ngFor="let f of data; let i=index;" cdkDrag cdkDragPreviewClass="dragging"
+				[cdkDragDisabled]="step>1">
 				<div class="file-image">
 					<mat-icon *ngIf="step<=1" class="white-icon remove-file" (click)="removeStory(f, i)">clear
 					</mat-icon>
 					<img class="preview" *ngIf="f.thumbnail" src="{{previewSource(f.thumbnail)}}"
 						[ngClass]="{'cover-border': i===0}" alt="file # {{i}}">
-					<div class="meta" [ngClass]="!f.meta.missingExif ? 'success' : 'error'">
+					<div class="meta" [ngClass]="!f.meta?.missingExif ? 'success' : 'error'">
 						<ng-container *ngIf="f.meta">
-							<ng-container *ngIf="f.meta.missingExif; let missings; else successExif">
-								<mat-basic-chip color="warn">{{missingMetaString(f.meta.missingExif)}}</mat-basic-chip>
+							<ng-container *ngIf="f.meta?.missingExif; else successExif">
+								<!-- <mat-basic-chip color="warn">{{missingMetaString(f.meta.missingExif)}}</!-->
 							</ng-container>
 							<ng-template #successExif>
 								<mat-basic-chip>meta verified</mat-basic-chip>
@@ -19,10 +20,6 @@
 					</div>
 				</div>
 				<td class="file-text" *ngIf="f.meta">
-					<div class="info-text" *ngIf="i===0">
-						<mat-icon class="default-icon">filter_1</mat-icon>
-						Cover image
-					</div>
 					<div class="info-text" *ngIf="f.file">
 						<mat-icon class="default-icon">insert_drive_file</mat-icon>
 						{{ f.file.name }}
@@ -31,13 +28,35 @@
 						<mat-icon class="default-icon">copyright</mat-icon>
 						{{ f.meta?.copyright }}
 					</div>
-					<div class="info-text" *ngIf="f.meta?.date">
+					<div class="info-text">
 						<mat-icon class="default-icon">watch_later</mat-icon>
-						{{ f.meta?.date | date: 'dd/MM/yyyy HH:mm' }}
+						<ng-container *ngIf="f.meta?.date; else inputDate">
+							{{ f.meta?.date | date: 'dd/MM/yyyy HH:mm' }}
+						</ng-container>
+						<ng-template #inputDate>
+							INPUT DATE
+						</ng-template>
 					</div>
-					<div class="info-text" *ngIf="f.location">
+					<div class="info-text">
 						<mat-icon class="default-icon">explore</mat-icon>
-						{{ f.location?.locationText }}
+						<ng-container *ngIf="f.location; else inputLocation">
+							{{ f.location?.locationText }}
+						</ng-container>
+						<ng-template #inputLocation>
+							<form [formGroup]="locationForm">
+								<mat-form-field color="warn" appearance="outline">
+									<mat-label>Input location</mat-label>
+									<input matInput type="text" formControlName="place" [matAutocomplete]="auto">
+									<mat-autocomplete #auto="matAutocomplete" autoActiveFirstOption="true"
+										class="mat-auto-locations">
+										<mat-option *ngFor="let loc of locationResults" [value]="loc.place_name">
+											{{loc.place_name}}
+										</mat-option>
+										<!-- (click)="getLatLng(f, loc, i)"> -->
+									</mat-autocomplete>
+								</mat-form-field>
+							</form>
+						</ng-template>
 					</div>
 					<!-- <div class="info-text location"> -->
 					<!-- <ng-container *ngIf="geo && geo[i]">

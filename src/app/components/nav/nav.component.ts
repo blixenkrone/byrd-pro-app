@@ -16,12 +16,19 @@ export class NavComponent implements OnInit {
 		private router: Router) { }
 
 	@Input() user!: IProUser;
-	@Input() isWait!: boolean;
 
 	ngOnInit() { }
 
-	homeBound() {
-		this.router.navigate(['/bookings'])
+	get activeRoute() {
+		if (this.router.isActive(this.router.url, true)) {
+			return this.router.url
+		}
+	}
+
+	navigateTo(path: string) {
+		const p = [`/${path}`]
+		console.log(p)
+		this.router.navigate(p)
 	}
 
 	openMenu() {

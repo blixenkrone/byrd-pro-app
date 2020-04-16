@@ -114,7 +114,6 @@ export class BookingComponent implements OnInit, OnDestroy {
 			// tap(v => console.log(v)),
 			finalize(() => {
 				this.loadSrv.setGlobalLoading(false)
-				console.log('should not load')
 			})
 		)
 	}

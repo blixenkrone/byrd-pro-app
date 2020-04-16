@@ -73,7 +73,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 			this.snackBar.open(`Welcome ${res.displayName}!`, undefined, { duration: 3000 })
 			this.loggedIn = true;
 			this.usrSrv.setUser(res)
-			this.router.navigate(['/bookings'])
+			this.router.navigate(['/upload'])
 				.then(() => window.location.reload())
 		})
 	}

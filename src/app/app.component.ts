@@ -10,7 +10,7 @@ import { Router } from '@angular/router';
 	selector: 'app-root',
 	template: `
 	<mat-progress-bar mode="indeterminate" color="accent" *ngIf="(isWait$ | async)"></mat-progress-bar>
-	<app-nav [user]="(user$ | async)" [isWait]="(isWait$ | async)"></app-nav>
+	<app-nav [user]="(user$ | async)"></app-nav>
 	<router-outlet></router-outlet>
 	`,
 	styleUrls: ['./app.component.scss']

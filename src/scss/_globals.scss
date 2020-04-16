@@ -7,6 +7,8 @@ $shade-inset: inset 1px 1px 0px rgba(0, 0, 0, 0.1);
 
 $byrd-shade-3: -2px 4px 22px -3px rgba(205, 209, 228, 0.86);
 
+$box-shadow-shade: 0 1px 6px 0 rgba(62, 57, 107, 0.2);
+
 .byrd-shade {
 	box-shadow: $byrd-shade-3;
 }
@@ -22,8 +24,14 @@ $media-breakpoint: 600px;
 }
 
 %shadow-rad {
-	box-shadow: $shade;
+	box-shadow: $box-shadow-shade;
 	padding: 0.25rem;
+	border-radius: $std-radius;
+}
+
+@mixin shadow-rad($padding: 0.25rem) {
+	box-shadow: $box-shadow-shade;
+	padding: $padding;
 	border-radius: $std-radius;
 }
 

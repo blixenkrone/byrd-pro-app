@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment.dev';
 import { Observable, BehaviorSubject, Subject, of, throwError, from, merge, concat, forkJoin, defer, } from 'rxjs';
 import { HttpClient, HttpParams, HttpHeaders, HttpRequest, HttpEventType } from '@angular/common/http';
-import { MetadataResponse, IStoryFile, parseFileSuffix, Story, IStoryUploadResponse, IStoryUploadBody } from './upload.types';
+import { IMetadataResponse, IStoryFile, parseFileSuffix, Story, IStoryUploadResponse, IStoryUploadBody } from './upload.types';
 import { Params } from '@angular/router';
 import { map, tap, switchMap, mergeMap, mergeAll, take, concatMap, reduce, timeoutWith, filter, finalize, concatAll } from 'rxjs/operators';
 import { AngularFireStorage, AngularFireUploadTask } from '@angular/fire/storage';
@@ -39,7 +39,7 @@ export class UploadService {
 		this.clearExifEvt$.next(true)
 	}
 
-	public getMetadata$(stories: IStoryFile[], type: 'image' | 'video', preview: boolean): Observable<MetadataResponse[]> {
+	public getMetadata$(stories: IStoryFile[], type: 'image' | 'video', preview: boolean): Observable<IMetadataResponse[]> {
 		const params = new HttpParams().set('preview', String(preview))
 		const url = `${environment.proApiUrl}/meta/${type}`
 		switch (type) {
@@ -48,11 +48,11 @@ export class UploadService {
 				for (const s of stories) {
 					formData.append('file', s.file, s.file.name)
 				}
-				return this.http.post<MetadataResponse[]>(url, formData, { params })
+				return this.http.post<IMetadataResponse[]>(url, formData, { params })
 			case 'video':
 				const file = stories[0].file
 				const headers = new HttpHeaders().set('Content-Type', file.type)
-				return this.http.post<MetadataResponse[]>(url, file, { params, headers })
+				return this.http.post<IMetadataResponse[]>(url, file, { params, headers })
 			default:
 				alert('no media type defined')
 				return throwError('no media type defined')

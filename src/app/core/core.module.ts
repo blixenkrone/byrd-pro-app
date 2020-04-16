@@ -11,13 +11,14 @@ import { httpTokenInterceptor } from '../core/http-interceptors';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { RouterModule } from '@angular/router';
 
 @NgModule({
 	imports: [
 		CommonModule,
 		HttpClientModule,
 		BrowserAnimationsModule,
-		// RouterModule,
+		RouterModule,
 		AngularFireModule.initializeApp(environment.fbConfig),
 		AngularFireAuthModule,
 		AngularFireStorageModule,

@@ -1,7 +1,9 @@
-import { IGeoLocation } from './upload.service';
+import { IGeoLocation, IGeoCoordinates } from './upload.service';
 import { EMediaType } from 'src/app/core/models/media.model';
 import * as md5 from 'md5';
 import { uuid } from 'uuidv4'
+import { isNil } from 'lodash';
+import { KeyValue } from '@angular/common';
 
 /**
  * parses a filename as a string to get the suffix in lowercase
@@ -12,6 +14,21 @@ export const parseFileSuffix = (fileName: string): { suffix: string } => {
 }
 
 const _requiredStoryKeys = ['width', 'height', 'lat', 'lng', 'date'];
+
+type ModelName = string
+
+/**
+ * key: true === the key is missing
+ */
+type RequiredKeyMissing<T> = {
+	width: T;
+	height: T;
+	location: T;
+	date: T;
+	model?: T;
+}
+
+type StoryIndex = number;
 
 /**
  *
@@ -37,14 +54,16 @@ interface IStoryBody {
 	storageRefSalt: (userId: string, suffix: string, uuidv4: string) => string
 	createStoryByrdAPI(uuids: string[]): IStoryUploadBody
 	files(): File[]
+	requiredKeys(): Map<StoryIndex, string>
 }
 
 export class Story implements IStoryBody {
+
 	constructor(
-		private mType: EMediaType,
+		private _mType: EMediaType,
 		private _userId: string,
-		private storyText: IStoryValueOptions,
-		private storyData: IStoryFile[]) {
+		private _storyText: IStoryValueOptions,
+		private _storyData: IStoryFile[]) {
 		this._uuidv4 = this.generateUIDArray()
 	}
 
@@ -133,22 +152,48 @@ export class Story implements IStoryBody {
 		return `${userId}/media/${uuidv4}/${md5(userId + uuidv4)}.${suffix}`
 	}
 
+	// returns [array index:key missing] for required story keys to proceed to step #2
+	public requiredKeys(): Map<StoryIndex, string> {
+		const missings = new Map<StoryIndex, string>();
+		for (let i = 0; i < this.storyData.length; i++) {
+			const checked: RequiredKeyMissing<boolean> = {
+				width: isNaN(this.width(i)),
+				height: isNaN(this.height(i)),
+				location: isNil(this.geo(i)),
+				date: isNaN(this.date(i)),
+			}
+			Object.entries(checked).filter(([key, missing]) => {
+				if (missing) {
+					missings.set(i, key)
+				}
+			})
+		}
+		return missings;
+	}
+
+	get storyData() {
+		return this._storyData;
+	}
+
+	get storyText() {
+		return this._storyText
+	}
 
 	private mediaType(): EMediaType {
-		return this.mType
+		return this._mType
 	}
 
 	// ! width height should find adjacent values as date maybe
-	private width(i: number) {
-		const w = this.storyData[i].meta?.width
+	private width(idx: number) {
+		const w = this.storyData[idx].meta?.width
 		if (w !== undefined) {
 			return w
 		}
 		return 0
 	}
 
-	private height(i: number) {
-		const h = this.storyData[i].meta?.height
+	private height(idx: number) {
+		const h = this.storyData[idx].meta?.height
 		if (h !== undefined) {
 			return h
 		}
@@ -163,17 +208,17 @@ export class Story implements IStoryBody {
 		return this.file(idx).size
 	}
 
-	private model(i: number): string {
-		const model = this.storyData[i].meta?.model
+	private model(idx: number): ModelName {
+		const model = this.storyData[idx].meta?.model
 		return model === '' || model === undefined ? 'Unknown' : model
 	}
 
-	private geo(i: number): { lat: number, lng: number } {
-		const meta = this.storyData[i].meta
+	private geo(idx: number): IGeoCoordinates {
+		const meta = this.storyData[idx].meta
 		if (meta?.lat && meta?.lng) {
 			return { lat: meta.lat, lng: meta.lng }
 		}
-		throw new Error('no geolocation')
+		return { lat: NaN, lng: NaN };
 	}
 
 	private date(i: number): number {
@@ -190,7 +235,7 @@ export class Story implements IStoryBody {
 				}
 				// } while (meta?.date === 0 || meta?.date === undefined);
 			}
-			throw Error('no date found')
+			return NaN
 		}
 	}
 
@@ -228,14 +273,14 @@ export interface IStoryUploadResponse {
 
 // represents final story upload to API
 export interface IStoryUploadBody extends IStoryValueOptions {
-	_geoloc: { lat: number, lng: number }
+	_geoloc: IGeoCoordinates;
 	isHash: true; // requires to define correct filereference in storage: `md5(uid + new(uuidv4)).{ext}`
 	coverId: string; // media.mediaSource[0]
 	media: IStoryMediaProps[];
 }
 
 interface IStoryMediaProps {
-	_geoloc: { lat: number, lng: number };
+	_geoloc: IGeoCoordinates;
 	mediaDate: Date | number;
 	mediaExtension: string; // jpeg, png, mp4
 	mediaType: EMediaType;
@@ -262,7 +307,7 @@ export interface IMetadata {
 }
 
 // Pro API metadata response
-export interface MetadataResponse {
+export interface IMetadataResponse {
 	meta: IMetadata;
 	thumbnail: (ArrayBuffer | any);
 	err?: any | { msg: string };

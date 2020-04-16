@@ -2,30 +2,32 @@
 @import 'src/scss/_gradients.scss';
 @import 'src/styles.scss';
 
-.container {
-  .login {
-    padding: 3rem;
-    max-width: 20rem;
-    margin: auto;
-    text-align: center;
-    background: $white;
-    @extend %shadow-rad;
+.login-container {
+	margin: 2rem;
 
-    img.login-logo {
-      max-width: 100%;
-      height: auto;
-      margin-bottom: 1.5rem;
-    }
+	.login {
+		padding: 3rem;
+		max-width: 20rem;
+		margin: auto;
+		text-align: center;
+		background: $white;
+		@extend %shadow-rad;
 
-    button {
-      &.login-btn {
-        color: $white-goose;
-        background: $gay-flame;
-      }
-    }
-  }
+		img.login-logo {
+			max-width: 100%;
+			height: auto;
+			margin-bottom: 1.5rem;
+		}
 
-  .signup-pro {
-    padding-top: 2rem;
-  }
+		button {
+			&.login-btn {
+				color: $white-goose;
+				background: $gay-flame;
+			}
+		}
+	}
+
+	.signup-pro {
+		padding-top: 2rem;
+	}
 }

@@ -1,10 +1,12 @@
-import { Component, OnInit, Input, Output, EventEmitter, InjectionToken, ChangeDetectionStrategy } from '@angular/core';
-import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { Component, OnInit, Input, Output, EventEmitter, InjectionToken, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import { CdkDragDrop, moveItemInArray, DragRef } from '@angular/cdk/drag-drop';
 import { UploadService, IGeoLocation, LocationService, IGeocodingPlace, IGeoCoordinates } from 'src/app/components/upload/upload.service';
 import { IStep } from 'src/app/shared/stepper/stepper.component';
-import { IStoryFile, MetadataResponse, IMetadata, requiredKeysMissing } from '../upload.types';
+import { IStoryFile, IMetadataResponse, IMetadata, requiredKeysMissing } from '../upload.types';
 import { FormGroup } from '@angular/forms';
 import { has } from 'lodash';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 export interface LatLngOutput {
 	loc: Map<string, number>;
@@ -17,7 +19,7 @@ export interface LatLngOutput {
 	styleUrls: ['./story-index.component.scss'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StoryIndexComponent implements OnInit {
+export class StoryIndexComponent implements OnInit, OnDestroy {
 	@Input() data!: IStoryFile[];
 	@Input() mediaType!: 'image' | 'video';
 	@Input() step!: number;
@@ -31,17 +33,35 @@ export class StoryIndexComponent implements OnInit {
 	// @Input() geo!: IGeoCoordinates[];
 
 	@Output() readonly latLng = new EventEmitter<LatLngOutput>();
+	destroyed$ = new Subject();
 
-	constructor(private uploadSrv: UploadService) { }
+	constructor(
+		// private dragRef: DragRef,
+		private locationService: LocationService,
+		private uploadService: UploadService) { }
 
-	ngOnInit() { }
 
-	// * unsubscribe to the stuff
-	// ngOnDestroy() { /**this.destroyed$.next(); this.destroyed$.unsubscribe(); */ }
+	ngOnInit() {
+		this.locationForm.valueChanges
+			.pipe(takeUntil(this.destroyed$))
+			.subscribe((info) => {
+				console.log(info)
+				this.locationService.getLatLngByAddress$(info).subscribe(v => console.log(v))
+			})
+	}
+
+	ngOnDestroy() {
+		this.destroyed$.next()
+		this.destroyed$.unsubscribe()
+	}
+
+	// get dragging() {
+	// 	return this.dragRef.isDragging()
+	// }
 
 	dragFile(event: CdkDragDrop<IStoryFile[]>) {
-		const src = this.data;
-		moveItemInArray(src, event.previousIndex, event.currentIndex);
+		// const src = this.data;
+		moveItemInArray(this.data, event.previousIndex, event.currentIndex);
 		// this.uploadSrv.nextFilesUploadsArray(this.data)
 	}
 
@@ -50,7 +70,7 @@ export class StoryIndexComponent implements OnInit {
 			this.data.splice(idx, 1)
 		}
 		console.log(this.data)
-		this.uploadSrv.nextFilesUploadsArray(this.data)
+		this.uploadService.nextFilesUploadsArray(this.data)
 	}
 	// click in html
 	getLatLng(geo: IGeocodingPlace, storyIdx: number) {
@@ -62,9 +82,13 @@ export class StoryIndexComponent implements OnInit {
 		}
 	}
 
+
+
 	missingMetaString = (missing: string[]) => {
 		const missingKeys = requiredKeysMissing(missing)
-		return `un-verified: ${missingKeys?.join(", ")}`
+		if (missingKeys) {
+			return `un-verified: ${missingKeys?.join(", ")}`
+		}
 	}
 
 	previewSource = (thumbnail: string) => {

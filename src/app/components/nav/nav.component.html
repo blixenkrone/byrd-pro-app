@@ -2,25 +2,30 @@
 	<div class="navbar">
 		<div class="navbar-header">
 			<div class="left">
-				<img src="assets/icons/icon-192x192.png" (click)="homeBound()" alt="byrd-logo" class="logo">
-				<img src="assets/logos/pro_text.svg" (click)="homeBound()" alt="byrd-logo" class="logo">
+				<img src="assets/icons/icon-192x192.png" (click)="navigateTo('upload')" alt="byrd-logo" class="logo">
+				<img src="assets/logos/pro_text.svg" (click)="navigateTo('upload')" alt="byrd-logo" class="logo">
 			</div>
-			<div class="middle">
-				<!-- <a [routerLink]="['/upload']" routerLinkActive="active">Create story</a>
-					<a [routerLink]="['/bookings']" routerLinkActive="active">Upload booking</a> -->
+			<div class="middle" *ngIf="activeRoute !== '/login' && activeRoute !== '/'">
+				<div class="route" [class.active-route]="activeRoute === '/upload/stories'">
+					<img class="route-logo" src="assets/logos/cloud.svg" alt="#" (click)="navigateTo('upload')">
+					<a [routerLink]="['/upload']" routerLinkActive="active">Upload</a>
+				</div>
+				<div class="route" [class.active-route]="activeRoute === '/bookings'" (click)="navigateTo('bookings')">
+					<img class="route-logo" src="assets/logos/calendar.svg" alt="#">
+					<a [routerLink]="['/bookings']" routerLinkActive="active">Booking</a>
+				</div>
 			</div>
-			<ng-container *ngIf="user; else placeholderTmp">
-				<div class="right">
-					<h2 class="text">@{{user?.displayName}}</h2>
+			<div class="right" style="width: 6rem;">
+				<ng-container *ngIf="user; else placeholderTmp">
 					<img class="logo" [matMenuTriggerFor]="menu" src="{{user.userPicture}}" alt="profile-logo">
 					<mat-menu #menu="matMenu" yPosition="below">
 						<button mat-menu-item (click)="logOut()">Log out</button>
 					</mat-menu>
-				</div>
-			</ng-container>
-			<ng-template #placeholderTmp>
-				<img class="logo" src="assets/icons/icon-192x192.png">
-			</ng-template>
+				</ng-container>
+				<ng-template #placeholderTmp>
+					<img class="logo" src="assets/icons/icon-192x192.png">
+				</ng-template>
+			</div>
 		</div>
 	</div>
 </div>

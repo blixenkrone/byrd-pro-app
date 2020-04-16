@@ -3,7 +3,6 @@
 .container {
 
 	.upload-container {
-		padding: 2rem;
 		margin: 2rem;
 
 		// styled when active in &.active
@@ -25,7 +24,7 @@
 
 		&.active {
 			border-radius: $std-radius;
-			background: $white;
+			// background: $white;
 			display: grid;
 			grid-template-columns: 1fr 1fr;
 			grid-template-areas:
