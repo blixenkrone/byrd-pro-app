@@ -7,9 +7,9 @@
 				<h1>{{headliners[step-1].headline}}</h1>
 				<p>{{headliners[step-1].sub}}</p>
 			</div>
-			<app-dropzone *ngIf="step===1" [existingData]="data" [isWait]="(isWait$ | async)"></app-dropzone>
+			<app-dropzone *ngIf="step===1" [existingData]="data.files" [isWait]="(isWait$ | async)"></app-dropzone>
 			<app-story-info *ngIf="step===2" [storyForm]="storyForm"></app-story-info>
-			<app-story-index *ngIf="step<3" [locationForm]="locationForm" [step]="step" [data]="data"
+			<app-story-index *ngIf="step<3" [locationForm]="locationForm" [step]="step" [data]="data.files"
 				[isWait]="(isWait$ | async)">
 			</app-story-index>
 			<!-- Success container -->
@@ -29,12 +29,14 @@
 		<ng-container *ngIf="(user$ | async) as user">
 			<div class="button-actions">
 				<button class="bloody-bird-bg" mat-flat-button *ngIf="step===1" (click)="setStep(2)"
-					[disabled]="(verifyValues$(data, user) | async) === false || (isWait$ | async) || data.length === 0">
+					[disabled]="!data.verified || (isWait$ | async) || data.files.length === 0">
 					Fill out information</button>
 				<button class="bloody-bird-bg" mat-flat-button *ngIf="step === 2"
 					(click)="setStep(step > 1 ? step-1 : 1)">Back</button>
-				<button class=" bloody-bird-bg" mat-flat-button *ngIf="step === 2" (click)="uploadStory(data, user)"
-					[disabled]="(isWait$ | async) === true || !storyForm.valid">Upload story</button>
+				<button class=" bloody-bird-bg" mat-flat-button *ngIf="step === 2"
+					(click)="uploadStory(data.files, user)" [disabled]="(isWait$ | async) === true || !storyForm.valid">
+					Upload story
+				</button>
 			</div>
 		</ng-container>
 	</div>

@@ -43,7 +43,8 @@ export class UploadComponent implements OnInit, OnDestroy {
 	locationForm!: FormGroup;
 	locationResults$!: Observable<IGeocodingPlace[]>;
 
-	data$!: Observable<IStoryFile[]>;
+	data$!: Observable<{ files: IStoryFile[], verified: boolean }>;
+	verifiedValues$!: Observable<boolean>;
 
 	constructor(
 		private dialogService: DialogService,
@@ -66,7 +67,7 @@ export class UploadComponent implements OnInit, OnDestroy {
 
 		this.initComponent()
 
-		this.verifiedValues$ = this.verifyValues$(val, user)
+		// this.verifiedValues$ = this.verifyValues$()
 
 		this.storyForm = this.createStoryForm()
 
@@ -112,7 +113,7 @@ export class UploadComponent implements OnInit, OnDestroy {
 			}),
 			map(kv => [...kv.entries()].length > 0 ? false : true),
 			tap(v => console.log(v)),
-			share(),
+			// share(),
 		)
 	}
 
@@ -236,16 +237,19 @@ export class UploadComponent implements OnInit, OnDestroy {
 					tap(val => console.log(val)),
 				)
 			}),
-
-			// tap(d => console.log(d)),
-			// withLatestFrom(files$),
+			withLatestFrom(this.user$),
+			exhaustMap(([val, user]) => {
+				return this.verifyValues$(val, user)
+			}),
+			withLatestFrom(files$),
+			map(([verified, files]) => ({ verified, files })),
 			tap(d => console.log(d)),
 			// map(([prev, curr]) => ({ ...prev, ...curr })),
 			catchError((err) => {
 				console.error(err)
 				return throwError(err)
 			}),
-			startWith([]),
+			startWith({ files: [], verified: false }),
 			tap(d => console.log(d)),
 		)
 	}
